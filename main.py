@@ -1,9 +1,14 @@
 from enum import Enum
+from typing import Annotated
 
-from fastapi import FastAPI, status, Request, HTTPException
+from fastapi import FastAPI, Depends, status, Request, HTTPException 
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
+from fastapi.security import OAuth2PasswordRequestForm
+
+from pprintpp import pprint
+from pwdlib import PasswordHash
 
 from pydantic import BaseModel
 
@@ -12,6 +17,9 @@ from users import users
 
 
 app = FastAPI()
+
+password_hash = PasswordHash.recommended()
+
 
 class LLMProviders(str, Enum):
     openai = "openai"
@@ -31,6 +39,7 @@ class Users(BaseModel):
     user_id: int
     name: str
     email: str
+    hash_pass: str
 
 
 def is_user_exit(id: int):
@@ -53,9 +62,18 @@ def get_user_settings(user_id: int):
             config = setting
             break
     return {"setting_exit": is_setting_exit, "config": config}
+
+def get_user_info(username: str):
+    for user in users:
+        if user["name"] == username.lower():
+            return user
+    return None
     
+def verify_password(password: str, user: Users):
+    return password_hash.verify(password, user["hash_pass"])
 
-
+def get_hash_password(password: str):
+    return password_hash.hash(password)
             
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -64,6 +82,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.get("/")
 async def home():
     return JSONResponse(content={"message": "welcome home"},status_code=status.HTTP_200_OK)
+
+@app.get("/login")
+async def login(formdata: Annotated[OAuth2PasswordRequestForm, Depends()]):
+ 
+    user = get_user_info(formdata.username)
+    pprint(user)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="username not found")
+    elif not verify_password(formdata.password, user):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="incorrect credentials")
+
+    return JSONResponse(content={"message": "login successful"}, status_code=status.HTTP_200_OK)
+
+
 
 @app.get("/settings")
 async def get_settings():
