@@ -85,17 +85,14 @@ async def home():
 
 @app.get("/login")
 async def login(formdata: Annotated[OAuth2PasswordRequestForm, Depends()]):
- 
     user = get_user_info(formdata.username)
-    pprint(user)
+
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="username not found")
     elif not verify_password(formdata.password, user):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="incorrect credentials")
 
     return JSONResponse(content={"message": "login successful"}, status_code=status.HTTP_200_OK)
-
-
 
 @app.get("/settings")
 async def get_settings():
