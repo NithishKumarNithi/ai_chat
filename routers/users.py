@@ -4,11 +4,11 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from ..data.users import users
-from ..data.settings import settings
-from ..model.schema import LoginUser
+from aichat.data.users import users
+from aichat.data.settings import settings
+from aichat.model.schema import LoginUser
 
-from ..utils import get_user_settings, get_current_user
+from aichat.utils.dependencies import get_user_settings, get_current_user
 
 router = APIRouter()
 

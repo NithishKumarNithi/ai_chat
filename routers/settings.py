@@ -2,9 +2,9 @@ from fastapi import APIRouter, status, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-from ..data.settings import settings
+from aichat.data.settings import settings
 
-from ..model.schema import LLMProviders, Settings
+from aichat.model.schema import LLMProviders, Settings
 
 router = APIRouter()
 

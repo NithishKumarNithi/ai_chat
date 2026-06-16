@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 import jwt
 
-from ..utils import get_user_info, verify_password
+from aichat.utils.dependencies import get_user_info, verify_password
 
 router = APIRouter()
 
