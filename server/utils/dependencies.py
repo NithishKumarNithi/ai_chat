@@ -51,6 +51,31 @@ def verify_password(password: str, user: Users):
 def get_hash_password(password: str):
     return password_hash.hash(password)
 
+def validate_token(token: Annotated[str, Depends(oauth_schema)]):
+
+    try: 
+        payload = jwt.decode(token, SECRET, ALGORITM)
+        
+        user = payload.get("user") 
+        user_details = get_user_info(user)
+
+        if not user_details:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid User",
+                headers={"WWW-Authenticate": "Bearer"})
+    except jwt.ExpiredSignatureError :
+            raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED, 
+                            detail="The access token provided has expired.",
+                            headers={"WWW-Authenticate": "Bearer"})
+    except:
+        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED, 
+                            detail="Could not validate credentials",
+                            headers={"WWW-Authenticate": "Bearer"})
+
+
 def get_current_user(token: Annotated[str, Depends(oauth_schema)]):
 
     try: 
@@ -62,9 +87,9 @@ def get_current_user(token: Annotated[str, Depends(oauth_schema)]):
         if not user_details:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, 
-                detail="Could not validate credentials",
+                detail="Invalid User",
                 headers={"WWW-Authenticate": "Bearer"})
-    except  jwt.ExpiredSignatureError :
+    except jwt.ExpiredSignatureError :
             raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED, 
                             detail="The access token provided has expired.",

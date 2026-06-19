@@ -1,34 +1,44 @@
-import LoginForm from "./components/forms/LoginForm"
+import { useNavigate } from "react-router";
+
+import LoginForm from "./components/forms/LoginForm";
+import { setSession, verifyToken } from "./utils";
 
 function App() {
+  let navigation = useNavigate();
 
-  async function handleLoginSubmit(e, user){
+  async function handleLoginSubmit(e, user) {
     e.preventDefault();
-    console.log("login submit is clicked");
 
-    let data = new FormData()
+    let data = new FormData();
 
-    Object.entries(user).map(([key, value]) => {
-      console.log("Key : ", key)
-      console.log("Value : ", value)
-      data.append(key, value)
-    })
+    Object.entries(user).forEach(([key, value]) => {
+      data.append(key, value);
+    });
 
     let token = await fetch("http://127.0.0.1:8000/home/login", {
       method: "POST",
-      body: data 
+      body: data,
     });
-    let res = await token.json();
-    console.log(res)
-    
-   
-    
 
-  }   
+    if (!token) {
+      throw Error("Invalid Request");
+    }
+
+    let res = await token.json();
+    console.log(res);
+    if (res.token) {
+      setSession("authToken", res.token);
+
+      let user = await verifyToken(res.token);
+      let { user_id } = user.data;
+      console.log(user);
+      navigation(`/dashboard/user/${user_id}`);
+    } else alert(res.detail);
+  }
 
   return (
     <div className="App">
-      <LoginForm onSubmit={handleLoginSubmit}/>
+      <LoginForm onSubmit={handleLoginSubmit} />
     </div>
   );
 }

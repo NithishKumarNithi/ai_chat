@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request, Cookie
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
@@ -8,9 +8,9 @@ from server.data.users import users
 from server.data.settings import settings
 from server.model.schema import LoginUser
 
-from server.utils.dependencies import get_user_settings, get_current_user
-
-router = APIRouter()
+from server.utils.dependencies import get_user_settings, validate_token, get_current_user
+ 
+router = APIRouter(dependencies=[Depends(validate_token)])
 
 @router.get("/users")
 async def get_users():

@@ -6,10 +6,12 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.encoders import jsonable_encoder
 
 import jwt
 
-from server.utils.dependencies import get_user_info, verify_password
+from server.utils.dependencies import get_user_info, verify_password, get_current_user
+from server.model.schema import LoginUser
 
 router = APIRouter()
 
@@ -29,8 +31,12 @@ async def login(formdata: Annotated[OAuth2PasswordRequestForm, Depends()]):
     elif not verify_password(formdata.password, user):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="incorrect credentials")
     
-    expire_time = datetime.now()
-    payload = {"id": user["user_id"], "user": user["name"], "exp": expire_time}
+    payload = {"id": user["user_id"], "user": user["name"]}
     jwt_en = jwt.encode(payload, SECRET, ALGORITM)
-
+ 
     return JSONResponse(content={"message": "login successful", "token": jwt_en, "type": "Bearer"}, status_code=status.HTTP_200_OK)
+
+@router.get("/verify")
+async def verify_token(user: Annotated[LoginUser, Depends(get_current_user)]):
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"data": jsonable_encoder(LoginUser(**user))})
+ 
